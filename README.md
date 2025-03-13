@@ -29,7 +29,7 @@ npm install https://github.com/lacherogwu/skhd-key-sequence
 ## Requirements
 
 - macOS (this package is designed for macOS only)
-- [skhd](https://github.com/koekeishiya/skhd) installed and configured
+- [skhd](https://github.com/koekeishiya/skhd) installed
 - Node.js 16 or higher
 
 ## Usage
@@ -68,6 +68,32 @@ const config = defineConfig({
 
 // Generate and save the configuration to ~/.skhdrc
 await config.save();
+
+// If the skhd service is running, it automatically detects changes without needing a service restart!
+```
+
+## Best Practices
+
+### Running skhd as a Service
+
+For the best experience with skhd key sequences, it's recommended to run skhd as a background service:
+
+```bash
+skhd --start-service
+```
+
+This ensures that:
+
+- skhd starts automatically when you log in
+- Your key sequences are always available
+- The service restarts if it crashes for any reason
+
+You only need to run this command once. After that, skhd will continue running in the background and will automatically start when you log in to your Mac.
+
+To stop the service:
+
+```bash
+skhd --stop-service
 ```
 
 ## How It Works
