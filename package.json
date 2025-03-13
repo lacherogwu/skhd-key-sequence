@@ -1,0 +1,48 @@
+{
+	"name": "skhd-key-sequence",
+	"version": "0.0.1",
+	"description": "A utility for defining and managing key sequence shortcuts for Simple Hotkey Daemon (skhd) on macOS.",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"types": "./dist/index.d.ts"
+		}
+	},
+	"scripts": {
+		"dev": "tsx --watch src/index.ts",
+		"build": "rm -rf dist && tsup src/index.ts --format esm --dts",
+		"build:watch": "rm -rf dist && tsup src/index.ts --watch --format esm --dts",
+		"release": "npm run build && npm publish"
+	},
+	"files": [
+		"dist"
+	],
+	"os": [
+		"darwin"
+	],
+	"keywords": [
+		"skhd",
+		"hotkeys",
+		"keyboard-shortcuts",
+		"macos",
+		"keybindings",
+		"key-sequence",
+		"shortcuts",
+		"automation",
+		"karabiner"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/lacherogwu/skhd-key-sequence.git"
+	},
+	"author": "LacheRo`",
+	"license": "MIT",
+	"type": "module",
+	"devDependencies": {
+		"@types/node": "^22.13.10",
+		"tsup": "^8.4.0",
+		"tsx": "^4.19.3",
+		"typescript": "^5.8.2"
+	}
+}
