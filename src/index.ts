@@ -23,6 +23,8 @@ export { app, open } from './utils';
  * await config.save();
  */
 export function defineConfig(config: Config) {
+	validateConfig(config);
+
 	return {
 		build() {
 			let result = '';
@@ -32,7 +34,10 @@ export function defineConfig(config: Config) {
 			result += '# Mode definitions\n';
 
 			Object.keys(config).forEach(modeName => {
-				result += `:: ${m(modeName)} : touch ${MODE_TRACK_FILE_PATH} && (sleep ${MODE_EXIT_TIMEOUT} && if [ -f ${MODE_TRACK_FILE_PATH} ]; then skhd -k '${MODE_EXIT_KEY}'; rm -f ${MODE_TRACK_FILE_PATH}; fi) &\n`;
+				// Each entry claims the mode with a token unique to this shell. The
+				// timeout only fires if that token is still the current one, so a timer
+				// left over from a previous mode cannot exit a mode entered after it.
+				result += `:: ${m(modeName)} : __t="$(od -An -N8 -tx1 /dev/urandom | tr -d " \\n")"; echo "$__t" > ${MODE_TRACK_FILE_PATH}; (sleep ${MODE_EXIT_TIMEOUT}; [ "$(cat ${MODE_TRACK_FILE_PATH} 2>/dev/null)" = "$__t" ] && { skhd -k '${MODE_EXIT_KEY}'; rm -f ${MODE_TRACK_FILE_PATH}; }) &\n`;
 			});
 
 			result += '\n# Mode switches\n';
@@ -77,4 +82,29 @@ export function defineConfig(config: Config) {
 			console.log(`Config saved to ${DEFAULT_SKHD_CONFIG_PATH}`);
 		},
 	};
+}
+
+function validateConfig(config: Config) {
+	const triggers = new Map<string, string>();
+
+	Object.entries(config).forEach(([modeName, modeConfig]) => {
+		const modifiers = modeConfig.modifiers?.length ? modeConfig.modifiers.join(' + ') : '';
+		const trigger = modifiers ? `${modifiers} - ${modeConfig.key}` : modeConfig.key;
+
+		const existing = triggers.get(trigger);
+		if (existing) {
+			throw new Error(`Duplicate mode trigger "${trigger}": used by both "${existing}" and "${modeName}". Only one mode can be bound to a trigger.`);
+		}
+		triggers.set(trigger, modeName);
+
+		if (modeConfig.key === MODE_EXIT_KEY) {
+			throw new Error(`Mode "${modeName}" is triggered by "${MODE_EXIT_KEY}", which is reserved for leaving a mode.`);
+		}
+
+		Object.keys(modeConfig.shortcuts).forEach(key => {
+			if (key === MODE_EXIT_KEY) {
+				throw new Error(`Mode "${modeName}" binds a shortcut to "${MODE_EXIT_KEY}", which is reserved for leaving a mode.`);
+			}
+		});
+	});
 }
